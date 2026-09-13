@@ -1,0 +1,2150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Makeda Farms — Fresh from the ground, to your table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<style>
+  :root {
+    --green-deep: #223421;
+    --green-darker: #182619;
+    --paper: #F3EEDD;
+    --paper-soft: #EAE3CC;
+    --gold: #CB9B3E;
+    --gold-bright: #DDAE4E;
+    --rust: #B8481F;
+    --ink: #1B2019;
+    --sage: #7C8F6E;
+    --cream-text: #F3EEDD;
+    --max-width: 1200px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --shadow-sm: 0 1px 2px rgba(27,32,25,0.06), 0 1px 1px rgba(27,32,25,0.04);
+    --shadow-md: 0 4px 14px rgba(27,32,25,0.08), 0 1px 3px rgba(27,32,25,0.06);
+    --shadow-lg: 0 24px 48px -12px rgba(20,28,20,0.28), 0 2px 8px rgba(20,28,20,0.08);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  button, a, input, select {
+    transition: transform 0.15s var(--ease), background-color 0.2s var(--ease),
+      border-color 0.2s var(--ease), color 0.2s var(--ease), opacity 0.2s var(--ease),
+      box-shadow 0.2s var(--ease);
+  }
+
+  button:active { transform: scale(0.97); }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  img, svg { display: block; max-width: 100%; }
+
+  .wrap {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  button {
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    border: none;
+  }
+
+  /* ---------- NAV ---------- */
+  header {
+    background: var(--green-deep);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid rgba(243,238,221,0.08);
+  }
+
+  nav.wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 76px;
+  }
+
+  .logo {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    color: var(--cream-text);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .logo span {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--cream-text);
+    font-size: 15px;
+    font-weight: 500;
+    opacity: 0.85;
+    transition: opacity 0.15s ease;
+    padding-bottom: 4px;
+    border-bottom: 1px solid transparent;
+  }
+  .nav-links a:hover { opacity: 1; border-bottom-color: var(--gold); }
+
+  .nav-right { display: flex; align-items: center; gap: 24px; }
+
+  .cart-btn {
+    background: transparent;
+    color: var(--cream-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 8px 4px;
+  }
+  .cart-count {
+    background: var(--gold);
+    color: var(--green-darker);
+    font-size: 12px;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ---------- OVERLAY ---------- */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(24,38,25,0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 90;
+  }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+
+  /* ---------- CART DRAWER ---------- */
+  .cart-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 400px;
+    max-width: 92vw;
+    background: var(--paper);
+    z-index: 100;
+    transform: translateX(100%);
+    transition: transform 0.32s var(--ease);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+  }
+  .cart-drawer.open { transform: translateX(0); }
+
+  .cart-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 24px 18px;
+    border-bottom: 1px solid rgba(27,32,25,0.1);
+  }
+  .cart-head h3 { font-size: 21px; font-weight: 500; flex: 1; }
+  .cart-close { background: none; font-size: 22px; line-height: 1; color: var(--ink); padding: 4px; }
+  .cart-back { background: none; font-size: 19px; line-height: 1; color: var(--ink); padding: 4px; }
+  .cart-back:hover { color: var(--gold); }
+
+  .cart-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 24px;
+  }
+  .cart-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(27,32,25,0.08);
+  }
+  .cart-item-icon {
+    width: 52px;
+    height: 52px;
+    background: var(--paper-soft);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .cart-item-icon svg { width: 34px; height: 34px; }
+  .cart-item-info { flex: 1; min-width: 0; }
+  .cart-item-info h4 { font-size: 15.5px; font-weight: 500; margin-bottom: 2px; }
+  .cart-item-info .unit { font-size: 12.5px; color: var(--sage); }
+  .cart-item-qty {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .qty-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid rgba(27,32,25,0.25);
+    background: transparent;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .qty-btn:hover { border-color: var(--ink); }
+  .cart-item-remove {
+    background: none;
+    color: var(--rust);
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  .cart-empty { color: var(--sage); font-size: 15px; padding: 40px 0; text-align: center; }
+
+  .cart-foot {
+    padding: 20px 24px 26px;
+    border-top: 1px solid rgba(27,32,25,0.1);
+  }
+  .cart-subtotal {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .cart-subtotal.total { font-size: 20px; padding-top: 10px; border-top: 1px solid rgba(27,32,25,0.12); }
+  .cart-subtotal.muted { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--sage); margin-bottom: 8px; }
+  .checkout-btn {
+    width: 100%;
+    background: var(--green-deep);
+    color: var(--cream-text);
+    font-weight: 600;
+    font-size: 15.5px;
+    padding: 15px;
+    border-radius: 3px;
+  }
+  .checkout-btn:hover { background: var(--green-darker); }
+  .checkout-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .checkout-btn:disabled:hover { background: var(--green-deep); }
+
+  /* ---------- CHECKOUT FORM ---------- */
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-bottom: 7px;
+    color: var(--ink);
+  }
+  .form-group input, .form-group textarea {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    padding: 11px 12px;
+    border: 1px solid rgba(27,32,25,0.2);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .form-group textarea { resize: vertical; min-height: 64px; }
+  .field-error { color: var(--rust); font-size: 12.5px; margin-top: 5px; display: none; }
+  .field-error.show { display: block; }
+
+  .fulfillment-options { display: flex; gap: 10px; margin-bottom: 20px; }
+  .fulfillment-card {
+    flex: 1;
+    border: 1.5px solid rgba(27,32,25,0.18);
+    border-radius: 4px;
+    padding: 14px 12px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--paper);
+  }
+  .fulfillment-card.selected { border-color: var(--gold); background: var(--paper-soft); }
+  .fulfillment-card .label { font-weight: 600; font-size: 14.5px; margin-bottom: 3px; }
+  .fulfillment-card .sub { font-size: 12px; color: var(--sage); }
+
+  .checkout-recap {
+    background: var(--paper-soft);
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin: 20px 0;
+    font-size: 13.5px;
+  }
+  .checkout-recap .recap-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    color: #3B4237;
+  }
+  .checkout-recap .recap-row.total {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    color: var(--ink);
+    border-top: 1px solid rgba(27,32,25,0.12);
+    margin-top: 8px;
+    padding-top: 10px;
+  }
+
+  .payment-note {
+    background: rgba(203,155,62,0.12);
+    border: 1px solid rgba(203,155,62,0.35);
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #4A3B14;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .confirmation-view { text-align: center; padding: 20px 4px; }
+  .confirmation-view .check-badge {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--green-deep);
+    color: var(--cream-text);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    margin: 0 auto 18px;
+  }
+  .confirmation-view h4 { font-family: 'Fraunces', serif; font-size: 21px; margin-bottom: 8px; }
+  .confirmation-view p { font-size: 14.5px; color: #3B4237; margin-bottom: 6px; }
+  .order-ref { font-weight: 700; color: var(--rust); }
+  .email-order-link {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green-deep);
+    border-bottom: 1.5px solid var(--gold);
+    padding-bottom: 2px;
+  }
+
+  /* ---------- ADMIN ---------- */
+  .product-card { position: relative; }
+  .remove-product-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1px solid rgba(184,72,31,0.4);
+    color: var(--rust);
+    font-size: 14px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .admin-mode .remove-product-btn { display: flex; }
+  .remove-product-btn:hover { background: var(--rust); color: var(--cream-text); }
+
+  .add-product-card {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
+    border: 1.5px dashed rgba(27,32,25,0.3);
+    border-radius: 4px;
+    background: transparent;
+  }
+  .admin-mode .add-product-card { display: flex; }
+  .add-product-card h3 { font-size: 16.5px; font-weight: 500; }
+  .add-product-card input, .add-product-card select {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(27,32,25,0.2);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .add-product-card button {
+    background: var(--gold);
+    color: var(--green-darker);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 11px;
+    border-radius: 3px;
+  }
+  .add-product-card button:hover { background: var(--gold-bright); }
+
+  .admin-bar {
+    display: none;
+    background: var(--rust);
+    color: var(--cream-text);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    padding: 10px 20px;
+  }
+  .admin-bar.visible { display: block; }
+  .admin-bar button {
+    background: none;
+    color: var(--cream-text);
+    text-decoration: underline;
+    font-size: 14px;
+    margin-left: 12px;
+  }
+
+  .owner-link {
+    background: none;
+    color: rgba(243,238,221,0.55);
+    font-size: 13px;
+    text-decoration: underline;
+    margin-top: 14px;
+  }
+  .owner-link:hover { color: var(--gold-bright); }
+
+  /* ---------- MODAL ---------- */
+  .modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -48%);
+    background: var(--paper);
+    width: 340px;
+    max-width: 88vw;
+    border-radius: 5px;
+    padding: 28px;
+    z-index: 110;
+    display: none;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal.open {
+    display: block;
+    animation: modalIn 0.22s var(--ease) both;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translate(-50%, -46%) scale(0.98); }
+    to { opacity: 1; transform: translate(-50%, -48%) scale(1); }
+  }
+  .modal h3 { font-size: 19px; margin-bottom: 6px; }
+  .modal p.hint { font-size: 13px; color: var(--sage); margin-bottom: 18px; }
+  .modal input {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 11px 12px;
+    border: 1px solid rgba(27,32,25,0.2);
+    border-radius: 3px;
+    margin-bottom: 14px;
+  }
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-actions button { flex: 1; padding: 11px; border-radius: 3px; font-size: 14px; font-weight: 600; }
+  .modal-cancel { background: transparent; border: 1px solid rgba(27,32,25,0.25); color: var(--ink); }
+  .modal-submit { background: var(--green-deep); color: var(--cream-text); }
+  .modal-error { color: var(--rust); font-size: 13px; margin-top: -6px; margin-bottom: 12px; display: none; }
+  .modal-error.show { display: block; }
+
+  /* ---------- PHOTO MENU / CAMERA ---------- */
+  .photo-menu-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 13px 14px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(27,32,25,0.15);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 14.5px;
+    font-weight: 500;
+  }
+  .photo-menu-option:last-child { margin-bottom: 0; }
+  .photo-menu-option:hover { border-color: var(--gold); background: var(--paper-soft); }
+  .photo-menu-option .icon { font-size: 17px; }
+
+  #cameraVideo {
+    width: 100%;
+    border-radius: 4px;
+    background: #000;
+    margin-bottom: 14px;
+    max-height: 320px;
+    object-fit: cover;
+  }
+  .camera-error {
+    color: var(--rust);
+    font-size: 13.5px;
+    margin-bottom: 14px;
+    display: none;
+    line-height: 1.4;
+  }
+  .camera-error.show { display: block; }
+  .camera-loading {
+    color: var(--sage);
+    font-size: 13.5px;
+    margin-bottom: 14px;
+  }
+
+  .nav-toggle { display: none; background: none; }
+  .nav-toggle span, .nav-toggle span::before, .nav-toggle span::after {
+    content: '';
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--cream-text);
+    position: relative;
+    transition: 0.2s;
+  }
+  .nav-toggle span::before { position: absolute; top: -7px; width: 22px; height: 2px; background: var(--cream-text); }
+  .nav-toggle span::after { position: absolute; top: 7px; width: 22px; height: 2px; background: var(--cream-text); }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: var(--green-deep);
+    color: var(--cream-text);
+    padding: 88px 0 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .hero-top {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-blobs {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    will-change: transform;
+  }
+  .blob-1 {
+    width: 480px; height: 480px;
+    top: -140px; left: -80px;
+    background: radial-gradient(circle at 35% 35%, var(--gold) 0%, transparent 72%);
+    opacity: 0.30;
+    animation: driftA 26s ease-in-out infinite alternate;
+  }
+  .blob-2 {
+    width: 420px; height: 420px;
+    bottom: -160px; left: 30%;
+    background: radial-gradient(circle at 40% 40%, var(--rust) 0%, transparent 72%);
+    opacity: 0.22;
+    animation: driftB 32s ease-in-out infinite alternate;
+  }
+  .blob-3 {
+    width: 380px; height: 380px;
+    top: 10%; right: -100px;
+    background: radial-gradient(circle at 45% 45%, var(--sage) 0%, transparent 72%);
+    opacity: 0.24;
+    animation: driftC 22s ease-in-out infinite alternate;
+  }
+
+  @keyframes driftA {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(70px, 50px) scale(1.15); }
+    100% { transform: translate(-30px, 90px) scale(0.92); }
+  }
+  @keyframes driftB {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(-60px, -40px) scale(1.1); }
+    100% { transform: translate(50px, -70px) scale(0.95); }
+  }
+  @keyframes driftC {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(-50px, 60px) scale(0.9); }
+    100% { transform: translate(-90px, -30px) scale(1.12); }
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .hero-copy p.kicker {
+    color: var(--gold-bright);
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(38px, 5vw, 60px);
+    max-width: 11ch;
+    margin-bottom: 22px;
+  }
+
+  .hero-copy p.sub {
+    font-size: 18px;
+    max-width: 46ch;
+    color: rgba(243,238,221,0.82);
+    margin-bottom: 34px;
+  }
+
+  .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--green-darker);
+    font-weight: 600;
+    font-size: 15.5px;
+    padding: 15px 26px;
+    border-radius: 3px;
+    transition: background 0.15s ease;
+  }
+  .btn-primary:hover { background: var(--gold-bright); }
+
+  .btn-ghost {
+    color: var(--cream-text);
+    font-weight: 500;
+    font-size: 15.5px;
+    padding: 15px 6px;
+    border-bottom: 1px solid rgba(243,238,221,0.35);
+  }
+  .btn-ghost:hover { border-bottom-color: var(--gold); }
+
+  .hero-art {
+    align-self: end;
+    justify-self: center;
+    padding-top: 20px;
+    width: 100%;
+    max-width: 440px;
+  }
+
+  .hero-art svg { width: 100%; max-width: 420px; }
+
+  .hero-photo-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--green-darker);
+    box-shadow: var(--shadow-lg);
+  }
+  .hero-photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .hero-photo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .photo-upload-controls {
+    display: none;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .admin-mode .photo-upload-controls { display: flex; }
+  .photo-upload-btn {
+    background: rgba(243,238,221,0.1);
+    border: 1px solid rgba(243,238,221,0.3);
+    color: var(--cream-text);
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 9px 14px;
+    border-radius: 3px;
+  }
+  .photo-upload-btn:hover { background: rgba(243,238,221,0.18); }
+
+  @keyframes settleIn {
+    0% { transform: translateY(26px) rotate(-2deg); opacity: 0; }
+    100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  }
+  .hero-art svg { animation: settleIn 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .hero-photo-frame { animation: settleIn 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+  /* ---------- SEASON STRIP ---------- */
+  .season-strip {
+    background: var(--green-darker);
+    border-top: 1px solid rgba(243,238,221,0.08);
+    padding: 18px 0;
+  }
+  .season-track {
+    display: flex;
+    gap: 28px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .season-track::-webkit-scrollbar { display: none; }
+  .season-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    color: rgba(243,238,221,0.78);
+    font-size: 14.5px;
+    font-weight: 500;
+  }
+  .season-item::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+
+  /* ---------- SECTIONS ---------- */
+  section { padding: 96px 0; }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+  }
+  .section-head h2 { font-size: clamp(28px, 3.4vw, 38px); }
+  .section-head p { color: var(--sage); font-size: 16px; max-width: 40ch; }
+
+  /* ---------- PRODUCT GRID ---------- */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+  }
+
+  .product-card {
+    background: var(--paper-soft);
+    border: 1px solid rgba(27,32,25,0.08);
+    border-radius: 4px;
+    padding: 28px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), border-color 0.2s var(--ease);
+  }
+  .product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(203,155,62,0.4);
+  }
+
+  .product-icon {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: var(--paper);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .product-icon svg { width: 88px; height: 88px; }
+  .product-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .card-photo-controls {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
+    background: linear-gradient(to top, rgba(27,32,25,0.55), transparent 60%);
+  }
+  .admin-mode .card-photo-controls { display: flex; }
+  .card-photo-btn {
+    background: rgba(243,238,221,0.92);
+    color: var(--ink);
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 6px 9px;
+    border-radius: 3px;
+  }
+  .card-photo-btn:hover { background: var(--gold); }
+
+  .product-info h3 { font-size: 19px; font-weight: 500; margin-bottom: 4px; }
+  .product-info .unit { color: var(--sage); font-size: 13.5px; }
+
+  .product-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+  }
+  .price { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; }
+
+  .add-btn {
+    background: var(--green-deep);
+    color: var(--cream-text);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 3px;
+    transition: background 0.15s ease;
+  }
+  .add-btn:hover { background: var(--green-darker); }
+  .add-btn.added { background: var(--rust); }
+
+  /* ---------- SITE-WIDE FLOWING BACKGROUND ---------- */
+  .site-bg-flow {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0.4;
+    mix-blend-mode: soft-light;
+  }
+  .site-bg-flow-inner {
+    position: absolute;
+    inset: -20%;
+    background: linear-gradient(135deg,
+      var(--gold) 0%, var(--rust) 25%, var(--sage) 50%, var(--green-deep) 75%, var(--gold) 100%);
+    background-size: 300% 300%;
+    filter: blur(70px);
+    animation: bgFlowHue 45s linear infinite;
+  }
+  @keyframes bgFlowHue {
+    0%   { filter: blur(70px) hue-rotate(0deg); }
+    100% { filter: blur(70px) hue-rotate(360deg); }
+  }
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+  }
+  .step { border-top: 2px solid var(--gold); padding-top: 20px; }
+  .step .num { font-family: 'Fraunces', serif; font-size: 15px; color: var(--gold); font-weight: 600; margin-bottom: 12px; display: block; }
+  .step h3 { font-size: 20px; font-weight: 500; margin-bottom: 10px; }
+  .step p { color: #3B4237; font-size: 15.5px; max-width: 34ch; }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    background: var(--green-deep);
+    color: rgba(243,238,221,0.85);
+    padding: 72px 0 32px;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+    gap: 40px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid rgba(243,238,221,0.12);
+  }
+  .footer-grid h4 {
+    color: var(--cream-text);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .footer-grid p, .footer-grid a {
+    display: block;
+    font-size: 14.5px;
+    color: rgba(243,238,221,0.7);
+    margin-bottom: 10px;
+  }
+  .footer-grid a:hover { color: var(--gold-bright); }
+
+  .newsletter-row {
+    display: flex;
+    margin-top: 14px;
+    border: 1px solid rgba(243,238,221,0.25);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .newsletter-row input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 12px 14px;
+    color: var(--cream-text);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+  }
+  .newsletter-row input::placeholder { color: rgba(243,238,221,0.5); }
+  .newsletter-row button {
+    background: var(--gold);
+    color: var(--green-darker);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 0 18px;
+  }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 24px;
+    font-size: 13px;
+    color: rgba(243,238,221,0.5);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 900px) {
+    .hero-inner { grid-template-columns: 1fr; }
+    .hero-art { justify-self: start; padding-top: 40px; }
+    .product-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps { grid-template-columns: 1fr; gap: 32px; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 0 20px; }
+    .nav-links, .nav-right .cart-btn span.cart-label { display: none; }
+    .nav-toggle { display: block; }
+    section { padding: 64px 0; }
+    .product-grid { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+    .hero { padding-top: 20px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hero-art svg { animation: none; }
+    .blob { animation: none; }
+    .site-bg-flow-inner { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="site-bg-flow" aria-hidden="true">
+  <div class="site-bg-flow-inner" id="siteBgFlowInner"></div>
+</div>
+
+<header>
+  <nav class="wrap">
+    <a href="#" class="logo">Makeda Farms <span>EST. 1974</span></a>
+    <ul class="nav-links">
+      <li><a href="#shop">Shop</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#visit">Visit</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="cart-btn" id="cartBtn">
+        <span class="cart-label">Cart</span>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+      <button class="nav-toggle" aria-label="Menu"><span></span></button>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-top">
+    <div class="hero-blobs">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+    </div>
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <p class="kicker">Forty acres, four generations</p>
+        <h1>Picked Tuesday. On your table Thursday.</h1>
+        <p class="sub">Makeda Farms grows vegetables, fruit, and eggs just outside town. We cut, wash, and box every order the same day it ships — nothing sits in a warehouse.</p>
+        <div class="hero-ctas">
+          <a href="#shop" class="btn-primary">Shop this week's harvest</a>
+          <a href="#shop" class="btn-ghost">See what's in season</a>
+        </div>
+      </div>
+      <div class="hero-art" id="heroArt">
+        <!-- rendered by JS: falls back to illustration until a photo is uploaded -->
+      </div>
+    </div>
+  </div>
+
+  <div class="season-strip">
+    <div class="wrap">
+      <div class="season-track">
+        <span class="season-item">Heirloom tomatoes</span>
+        <span class="season-item">Sweet corn</span>
+        <span class="season-item">Zucchini</span>
+        <span class="season-item">Basil</span>
+        <span class="season-item">Farm eggs</span>
+        <span class="season-item">Yellow peaches</span>
+        <span class="season-item">Rainbow chard</span>
+        <span class="season-item">New potatoes</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="admin-bar" id="adminBar">
+  You're in owner mode — you can add or remove products below.
+  <button id="exitAdminBtn">Exit owner mode</button>
+</div>
+
+<section id="shop">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>This week's harvest</h2>
+      <p>Inventory updates every Monday morning based on what's actually ready to cut.</p>
+    </div>
+    <div class="product-grid" id="productGrid">
+      <!-- product cards are rendered here by JS -->
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>How ordering works</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="num">01</span>
+        <h3>Browse what's fresh</h3>
+        <p>The shop reflects what's actually ready to harvest — we update it every Monday, not on a fixed catalog.</p>
+      </div>
+      <div class="step">
+        <span class="num">02</span>
+        <h3>Place your order</h3>
+        <p>Choose delivery within 15 miles or pickup at the farm stand. Orders close Wednesday at noon.</p>
+      </div>
+      <div class="step">
+        <span class="num">03</span>
+        <h3>Get it within 48 hours</h3>
+        <p>Everything is cut, washed, and boxed the same day it goes out — never held in cold storage first.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="visit">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4>Makeda Farms</h4>
+        <p>412 Orchard Hollow Road<br>Blue Ridge, VA 24067</p>
+        <p>Open Tue–Sat, 9am–5pm<br>Farm stand & pickup on-site</p>
+        <button class="owner-link" id="ownerLinkBtn">Farm owner? Manage products</button>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <a href="#shop">This week's harvest</a>
+        <a href="#">Farm eggs</a>
+        <a href="#">Gift boxes</a>
+        <a href="#">Wholesale</a>
+      </div>
+      <div>
+        <h4>Farm</h4>
+        <a href="#how">How ordering works</a>
+        <a href="#">Visit the stand</a>
+        <a href="#">Contact</a>
+      </div>
+      <div>
+        <h4>Get the harvest list</h4>
+        <p>A short email every Monday with what's ready to order.</p>
+        <div class="newsletter-row">
+          <input type="email" placeholder="you@email.com">
+          <button>Sign up</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Makeda Farms. All rights reserved.</span>
+      <span>Blue Ridge, Virginia</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const navToggle = document.querySelector('.nav-toggle');
+  const navLinks = document.querySelector('.nav-links');
+  navToggle.addEventListener('click', () => {
+    navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+  });
+</script>
+
+<!-- ===== CART DRAWER ===== -->
+<div class="overlay" id="overlay"></div>
+
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-head">
+    <button class="cart-back" id="cartBackBtn" style="display:none;">&larr;</button>
+    <h3 id="cartDrawerTitle">Your cart</h3>
+    <button class="cart-close" id="cartCloseBtn">&times;</button>
+  </div>
+  <div class="cart-body" id="cartDrawerBody"></div>
+  <div class="cart-foot" id="cartDrawerFoot"></div>
+</div>
+
+<!-- ===== OWNER LOGIN MODAL ===== -->
+<div class="modal" id="loginModal">
+  <h3>Owner tools</h3>
+  <p class="hint">Sign in with your owner account to add or remove products.</p>
+  <input type="email" id="ownerEmail" placeholder="Email" autocomplete="username">
+  <input type="password" id="ownerPassword" placeholder="Password" autocomplete="current-password">
+  <p class="modal-error" id="loginError">That email or password isn't right.</p>
+  <div class="modal-actions">
+    <button class="modal-cancel" id="loginCancelBtn">Cancel</button>
+    <button class="modal-submit" id="loginSubmitBtn">Sign in</button>
+  </div>
+</div>
+
+<!-- ===== PHOTO MENU MODAL ===== -->
+<div class="modal" id="photoMenuModal">
+  <h3>Change photo</h3>
+  <p class="hint">Choose how you'd like to add a photo.</p>
+  <button class="photo-menu-option" id="photoOptionCamera"><span class="icon">📷</span> Take a photo (camera)</button>
+  <button class="photo-menu-option" id="photoOptionUpload"><span class="icon">🖼️</span> Upload from gallery</button>
+  <button class="photo-menu-option" id="photoOptionWeb"><span class="icon">🌐</span> Add from a web link</button>
+  <div class="modal-actions" style="margin-top: 6px;">
+    <button class="modal-cancel" id="photoMenuCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- ===== LIVE CAMERA MODAL ===== -->
+<div class="modal" id="cameraModal" style="width: 420px;">
+  <h3>Take a photo</h3>
+  <p class="camera-loading" id="cameraLoading">Requesting camera access…</p>
+  <p class="camera-error" id="cameraError"></p>
+  <video id="cameraVideo" autoplay playsinline muted></video>
+  <canvas id="cameraCanvas" style="display:none;"></canvas>
+  <div class="modal-actions">
+    <button class="modal-cancel" id="cameraCancelBtn">Cancel</button>
+    <button class="modal-submit" id="cameraCaptureBtn">Capture</button>
+  </div>
+</div>
+
+<!-- ===== WEB LINK MODAL ===== -->
+<div class="modal" id="urlModal">
+  <h3>Add photo from the web</h3>
+  <p class="hint">Paste a direct link to an image (ending in .jpg, .png, etc).</p>
+  <input type="text" id="photoUrlInput" placeholder="https://example.com/photo.jpg">
+  <p class="modal-error" id="urlError">That doesn't look like a valid image link.</p>
+  <div class="modal-actions">
+    <button class="modal-cancel" id="urlCancelBtn">Cancel</button>
+    <button class="modal-submit" id="urlSubmitBtn">Use this photo</button>
+  </div>
+</div>
+
+<script>
+/* =======================================================
+   MAKEDA FARMS — product catalog, cart, checkout, and owner tools
+   Products, orders, the hero photo, and login now live in Supabase.
+   The cart itself stays in this browser only — it's fine for it to
+   be per-device since nobody needs to see someone else's cart.
+   ======================================================= */
+
+// ---- FILL THESE IN after running supabase-setup.sql ----
+// Find both in Supabase: Project Settings → API
+const SUPABASE_URL = 'https://enktmtyxfgcviqnfagla.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_1mLcVKET-51jTu01Sr9FRQ_xCEpcGIs';
+
+const supabaseConfigured = SUPABASE_URL.startsWith('http');
+const db = supabaseConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+if (!supabaseConfigured) {
+  console.warn('Supabase isn\'t configured yet — running in local demo mode. See supabase-setup.sql and fill in SUPABASE_URL / SUPABASE_ANON_KEY.');
+}
+
+// ---- Paystack (card + mobile money) ----
+const PAYSTACK_PUBLIC_KEY = 'pk_test_8471d96249e5c57e77a3d6b6f0cf979c7a66fc43';
+const paystackConfigured = PAYSTACK_PUBLIC_KEY.startsWith('pk_') && supabaseConfigured;
+const VERIFY_PAYMENT_URL = '/verify-payment';
+
+// Make any unexpected error readable in the console instead of "[object Object]"
+window.addEventListener('unhandledrejection', e => {
+  const reason = e.reason;
+  console.error('Unhandled error:', (reason && reason.message) ? reason.message : reason);
+});
+window.addEventListener('error', e => {
+  console.error('Script error:', e.message, 'at', e.filename + ':' + e.lineno);
+});
+
+const ICONS = {
+  tomato: `<circle cx="44" cy="50" r="26" stroke="#B8481F" stroke-width="3"/><path d="M44 24 C38 14 28 12 20 16 M44 24 C50 14 60 12 68 16 M44 24 L44 34" stroke="#7C8F6E" stroke-width="3" stroke-linecap="round"/>`,
+  corn: `<path d="M44 16 C58 16 64 40 61 60 C58 76 30 76 27 60 C24 40 30 16 44 16 Z" stroke="#CB9B3E" stroke-width="3"/><path d="M30 32 L58 32 M28 46 L60 46 M28 60 L60 60" stroke="#CB9B3E" stroke-width="1.5" opacity="0.6"/>`,
+  eggs: `<ellipse cx="30" cy="52" rx="13" ry="17" stroke="#7C8F6E" stroke-width="3"/><ellipse cx="46" cy="46" rx="13" ry="17" stroke="#7C8F6E" stroke-width="3"/><ellipse cx="62" cy="54" rx="13" ry="17" stroke="#7C8F6E" stroke-width="3"/>`,
+  zucchini: `<path d="M32 18 C24 30 24 60 32 72 C40 60 40 30 32 18 Z M56 18 C48 30 48 60 56 72 C64 60 64 30 56 18 Z" stroke="#7C8F6E" stroke-width="3"/>`,
+  basil: `<path d="M44 70 L44 30 M44 30 C34 28 30 18 34 10 C42 14 44 22 44 30 M44 40 C54 38 58 28 54 20 C46 24 44 32 44 40 M44 50 C34 48 30 38 34 30 C42 34 44 42 44 50 M44 60 C54 58 58 48 54 40 C46 44 44 52 44 60" stroke="#7C8F6E" stroke-width="3" stroke-linecap="round"/>`,
+  peach: `<circle cx="44" cy="48" r="24" stroke="#CB9B3E" stroke-width="3"/><path d="M44 24 L44 16 M44 16 C48 12 54 12 56 16" stroke="#7C8F6E" stroke-width="3" stroke-linecap="round"/>`,
+  leaf: `<path d="M44 68 C44 44 30 28 18 24 C30 34 38 48 40 68 Z M44 68 C44 44 58 28 70 24 C58 34 50 48 48 68 Z" stroke="#7C8F6E" stroke-width="3"/>`
+};
+
+// Only used as a safety net if Supabase isn't configured yet
+const DEFAULT_PRODUCTS = [
+  { id: 'tomatoes', name: 'Heirloom tomatoes', price: 4.50, unit: 'Sold by the pound', priceLabel: 'GH₵4.50/lb', icon: 'tomato' },
+  { id: 'corn',     name: 'Sweet corn',        price: 0.75, unit: 'Sold per ear',        priceLabel: 'GH₵0.75',    icon: 'corn' },
+  { id: 'eggs',     name: 'Farm eggs',         price: 6.00, unit: 'Dozen, mixed brown',  priceLabel: 'GH₵6.00',    icon: 'eggs' },
+  { id: 'zucchini', name: 'Zucchini',          price: 2.00, unit: 'Sold by the pound',   priceLabel: 'GH₵2.00/lb', icon: 'zucchini' },
+  { id: 'basil',    name: 'Basil',             price: 3.00, unit: 'Sold by the bunch',   priceLabel: 'GH₵3.00',    icon: 'basil' },
+  { id: 'peaches',  name: 'Yellow peaches',    price: 3.50, unit: 'Sold by the pound',   priceLabel: 'GH₵3.50/lb', icon: 'peach' }
+];
+
+let products = [];
+let cart = loadCart();
+let adminMode = false;
+
+/* ---- Products now come from the "products" table in Supabase ---- */
+async function loadProducts() {
+  if (!supabaseConfigured) {
+    const saved = localStorage.getItem('makeda_products');
+    return saved ? JSON.parse(saved) : DEFAULT_PRODUCTS.slice();
+  }
+  const { data, error } = await db.from('products').select('*').order('created_at');
+  if (error) { console.error('loadProducts failed:', error.message || error); return []; }
+  return data.map(p => ({
+    id: p.id, name: p.name, unit: p.unit, price: Number(p.price),
+    priceLabel: p.price_label, icon: p.icon || 'leaf', image: p.image_url
+  }));
+}
+
+function loadCart() {
+  const saved = localStorage.getItem('makeda_cart');
+  return saved ? JSON.parse(saved) : {};
+}
+function saveCart() {
+  localStorage.setItem('makeda_cart', JSON.stringify(cart));
+}
+
+/* ---------- RENDER PRODUCTS ---------- */
+function renderProducts() {
+  const grid = document.getElementById('productGrid');
+  document.body.classList.toggle('admin-mode', adminMode);
+
+  let html = products.map(p => `
+    <div class="product-card" data-id="${p.id}">
+      ${adminMode ? `<button class="remove-product-btn" data-remove="${p.id}" title="Remove product">&times;</button>` : ''}
+      <div class="product-icon">
+        ${p.image
+          ? `<img src="${p.image}" alt="${p.name}">`
+          : `<svg viewBox="0 0 88 88" fill="none">${ICONS[p.icon] || ICONS.leaf}</svg>`}
+        <div class="card-photo-controls">
+          <button class="card-photo-btn" data-photo-target="${p.id}">Change photo</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <h3>${p.name}</h3>
+        <p class="unit">${p.unit}</p>
+      </div>
+      <div class="product-foot">
+        <span class="price">${p.priceLabel}</span>
+        <button class="add-btn" data-add="${p.id}">Add</button>
+      </div>
+    </div>
+  `).join('');
+
+  html += `
+    <div class="product-card add-product-card">
+      <h3>Add a new product</h3>
+      <input type="text" id="newName" placeholder="Product name">
+      <input type="text" id="newUnit" placeholder="Unit (e.g. Sold by the pound)">
+      <input type="text" id="newPrice" placeholder="Price label (e.g. GH₵3.00/lb)">
+      <select id="newIcon">
+        <option value="tomato">Tomato icon</option>
+        <option value="corn">Corn icon</option>
+        <option value="eggs">Eggs icon</option>
+        <option value="zucchini">Zucchini icon</option>
+        <option value="basil">Basil icon</option>
+        <option value="peach">Peach icon</option>
+        <option value="leaf">Generic leaf icon</option>
+      </select>
+      <button id="addProductBtn">Add product</button>
+    </div>
+  `;
+
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('[data-add]').forEach(btn => {
+    btn.addEventListener('click', () => addToCart(btn.getAttribute('data-add'), btn));
+  });
+  grid.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.addEventListener('click', () => removeProduct(btn.getAttribute('data-remove')));
+  });
+  grid.querySelectorAll('[data-photo-target]').forEach(btn => {
+    btn.addEventListener('click', () => openPhotoMenu(btn.getAttribute('data-photo-target')));
+  });
+  const addProductBtn = document.getElementById('addProductBtn');
+  if (addProductBtn) addProductBtn.addEventListener('click', addProduct);
+}
+
+/* ---------- UNIFIED PHOTO SYSTEM (product cards + hero + site background) ---------- */
+/* currentPhotoTarget is 'hero', 'bg-carrot' / 'bg-rabbit' / 'bg-farm', or a product id */
+let currentPhotoTarget = null;
+let cameraStream = null;
+
+function getPhotoFor(target) {
+  if (target === 'hero') return loadHeroImage();
+  return (products.find(p => p.id === target) || {}).image;
+}
+async function uploadPhotoToStorage(path, dataUrl) {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const { error: uploadError } = await db.storage.from('site-photos').upload(path, blob, {
+    upsert: true, contentType: blob.type || 'image/jpeg'
+  });
+  if (uploadError) throw uploadError;
+  const { data } = db.storage.from('site-photos').getPublicUrl(path);
+  return data.publicUrl + '?t=' + Date.now(); // cache-bust so the new photo shows immediately
+}
+
+async function applyPhoto(target, urlOrDataUrl) {
+  if (!adminMode) return; // only the logged-in owner can change photos
+
+  let finalUrl = urlOrDataUrl;
+  // Camera captures and gallery uploads arrive as data: URLs — those get
+  // uploaded to Supabase Storage. A pasted web link is already a URL, so
+  // it's used as-is with no upload needed.
+  if (supabaseConfigured && urlOrDataUrl.startsWith('data:')) {
+    try {
+      const path = target === 'hero' ? 'hero.jpg' : `products/${target}-${Date.now()}.jpg`;
+      finalUrl = await uploadPhotoToStorage(path, urlOrDataUrl);
+    } catch (err) {
+      console.error('Photo upload failed:', err.message || err);
+      alert("Couldn't upload that photo. Try a smaller image, or use 'Add from web' with an image link instead.");
+      return;
+    }
+  }
+
+  if (target === 'hero') {
+    await saveHeroImage(finalUrl);
+    renderHero();
+    return;
+  }
+
+  if (supabaseConfigured) {
+    const { error } = await db.from('products').update({ image_url: finalUrl }).eq('id', target);
+    if (error) { alert('Could not save that photo to the product.'); return; }
+    products = await loadProducts();
+  } else {
+    const product = products.find(p => p.id === target);
+    if (!product) return;
+    product.image = finalUrl;
+    try { localStorage.setItem('makeda_products', JSON.stringify(products)); } catch (err) {
+      alert('That photo was too large for local demo mode. Try a smaller image.');
+      return;
+    }
+  }
+  renderProducts();
+}
+
+function readFileAsDataURL(file, callback) {
+  const reader = new FileReader();
+  reader.onload = () => callback(reader.result);
+  reader.readAsDataURL(file);
+}
+
+/* ---- Step 1: the menu (Take photo / Upload / From the web) ---- */
+const photoMenuModal = document.getElementById('photoMenuModal');
+function openPhotoMenu(target) {
+  if (!adminMode) return; // only the logged-in owner can change photos
+  currentPhotoTarget = target;
+  photoMenuModal.classList.add('open');
+  overlay.classList.add('open');
+}
+function closePhotoMenu() {
+  photoMenuModal.classList.remove('open');
+  overlay.classList.remove('open');
+}
+document.getElementById('photoOptionCamera').addEventListener('click', () => {
+  closePhotoMenu();
+  openCameraCapture(currentPhotoTarget);
+});
+document.getElementById('photoOptionUpload').addEventListener('click', () => {
+  closePhotoMenu();
+  triggerDeviceUpload(currentPhotoTarget);
+});
+document.getElementById('photoOptionWeb').addEventListener('click', () => {
+  closePhotoMenu();
+  openUrlModal(currentPhotoTarget);
+});
+document.getElementById('photoMenuCancelBtn').addEventListener('click', closePhotoMenu);
+
+/* ---- Option A: upload from device gallery ---- */
+function triggerDeviceUpload(target) {
+  if (!adminMode) return; // only the logged-in owner can change photos
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*'; // no "capture" attribute — this opens the photo
+                             // gallery/library, not the camera
+  // Important for mobile Safari/Chrome: a file input that's never attached
+  // to the page will often fail to open the native picker at all. Attaching
+  // it off-screen (rather than display:none, which some browsers also balk
+  // at) makes the picker open reliably, then we clean it up afterward.
+  input.style.position = 'fixed';
+  input.style.top = '-9999px';
+  input.style.left = '-9999px';
+  input.style.opacity = '0';
+  document.body.appendChild(input);
+
+  const cleanup = () => { if (input.parentNode) input.parentNode.removeChild(input); };
+
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    if (file) readFileAsDataURL(file, dataUrl => applyPhoto(target, dataUrl));
+    cleanup();
+  });
+  // Cancel (no file chosen) still needs cleanup so the hidden input doesn't linger
+  input.addEventListener('cancel', cleanup);
+  window.addEventListener('focus', cleanup, { once: true });
+
+  input.click();
+}
+
+/* ---- Option B: live camera (desktop webcam or mobile camera) ---- */
+const cameraModal = document.getElementById('cameraModal');
+const cameraVideo = document.getElementById('cameraVideo');
+const cameraErrorEl = document.getElementById('cameraError');
+const cameraLoadingEl = document.getElementById('cameraLoading');
+
+function openCameraCapture(target) {
+  currentPhotoTarget = target;
+  if (!adminMode) return; // only the logged-in owner can change photos
+  cameraErrorEl.classList.remove('show');
+
+  const canUseLiveCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.isSecureContext);
+  if (!canUseLiveCamera) {
+    // Fall back to the mobile OS camera app directly — this route doesn't need
+    // a secure (https) context, so it still works when opened as a local file.
+    triggerNativeCameraApp(target);
+    return;
+  }
+
+  cameraModal.classList.add('open');
+  overlay.classList.add('open');
+  cameraLoadingEl.style.display = 'block';
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+    .then(stream => {
+      cameraStream = stream;
+      cameraVideo.srcObject = stream;
+      cameraLoadingEl.style.display = 'none';
+    })
+    .catch(() => {
+      cameraLoadingEl.style.display = 'none';
+      cameraErrorEl.textContent = "Couldn't access a camera — your browser may have blocked permission, or none is available. Try Upload or a web link instead.";
+      cameraErrorEl.classList.add('show');
+    });
+}
+
+function closeCameraCapture() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  cameraModal.classList.remove('open');
+  overlay.classList.remove('open');
+}
+
+function captureFromCamera() {
+  if (!cameraStream) return;
+  const canvas = document.getElementById('cameraCanvas');
+  canvas.width = cameraVideo.videoWidth;
+  canvas.height = cameraVideo.videoHeight;
+  canvas.getContext('2d').drawImage(cameraVideo, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  applyPhoto(currentPhotoTarget, dataUrl);
+  closeCameraCapture();
+}
+
+document.getElementById('cameraCaptureBtn').addEventListener('click', captureFromCamera);
+document.getElementById('cameraCancelBtn').addEventListener('click', closeCameraCapture);
+
+// Fallback for browsers/contexts where live getUserMedia isn't available
+// (e.g. viewing the file directly rather than over https): this still opens
+// the phone's real camera app via the OS, it's just not a live in-page preview.
+function triggerNativeCameraApp(target) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.style.position = 'fixed';
+  input.style.top = '-9999px';
+  input.style.left = '-9999px';
+  input.style.opacity = '0';
+  document.body.appendChild(input);
+
+  const cleanup = () => { if (input.parentNode) input.parentNode.removeChild(input); };
+
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    if (file) readFileAsDataURL(file, dataUrl => applyPhoto(target, dataUrl));
+    cleanup();
+  });
+  input.addEventListener('cancel', cleanup);
+  window.addEventListener('focus', cleanup, { once: true });
+
+  input.click();
+}
+
+/* ---- Option C: add a photo from a web link ---- */
+const urlModal = document.getElementById('urlModal');
+function openUrlModal(target) {
+  if (!adminMode) return; // only the logged-in owner can change photos
+  currentPhotoTarget = target;
+  document.getElementById('photoUrlInput').value = '';
+  document.getElementById('urlError').classList.remove('show');
+  urlModal.classList.add('open');
+  overlay.classList.add('open');
+  document.getElementById('photoUrlInput').focus();
+}
+function closeUrlModal() {
+  urlModal.classList.remove('open');
+  overlay.classList.remove('open');
+}
+function submitUrlPhoto() {
+  const val = document.getElementById('photoUrlInput').value.trim();
+  if (!/^https?:\/\/.+/i.test(val)) {
+    document.getElementById('urlError').classList.add('show');
+    return;
+  }
+  applyPhoto(currentPhotoTarget, val);
+  closeUrlModal();
+}
+document.getElementById('urlSubmitBtn').addEventListener('click', submitUrlPhoto);
+document.getElementById('urlCancelBtn').addEventListener('click', closeUrlModal);
+document.getElementById('photoUrlInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitUrlPhoto(); });
+
+/* ---------- HERO PHOTO ---------- */
+async function loadHeroImage() {
+  if (!supabaseConfigured) return localStorage.getItem('makeda_hero_image');
+  const { data, error } = await db.from('site_settings').select('value').eq('key', 'hero_image').maybeSingle();
+  if (error) { console.error('loadHeroImage failed:', error.message || error); return null; }
+  return data ? data.value : null;
+}
+async function saveHeroImage(url) {
+  if (!supabaseConfigured) { localStorage.setItem('makeda_hero_image', url); return; }
+  const { error } = await db.from('site_settings').upsert({ key: 'hero_image', value: url });
+  if (error) console.error('saveHeroImage failed:', error.message || error);
+}
+
+async function renderHero() {
+  const heroArt = document.getElementById('heroArt');
+  const heroImage = await loadHeroImage();
+
+  const defaultIllustration = `
+    <svg viewBox="0 0 420 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 260 L370 260 L350 380 L70 380 Z" stroke="#DDAE4E" stroke-width="3" fill="none"/>
+      <path d="M50 260 L370 260 M70 380 L350 380" stroke="#DDAE4E" stroke-width="3"/>
+      <path d="M70 380 L50 260 M350 380 L370 260" stroke="#DDAE4E" stroke-width="3"/>
+      <path d="M120 260 L136 380 M300 260 L284 380" stroke="#DDAE4E" stroke-width="2" opacity="0.6"/>
+      <g>
+        <circle cx="140" cy="220" r="42" stroke="#B8481F" stroke-width="3" fill="none"/>
+        <path d="M140 178 C133 165 122 162 112 166 M140 178 C147 165 158 162 168 166 M140 178 L140 190" stroke="#7C8F6E" stroke-width="3" stroke-linecap="round" fill="none"/>
+      </g>
+      <g>
+        <path d="M230 175 L260 260 C262 268 250 272 246 264 L222 182 Z" stroke="#DDAE4E" stroke-width="3" fill="none"/>
+        <path d="M232 172 C226 158 216 152 206 154 M240 170 C244 155 256 148 268 152 M236 168 L236 148" stroke="#7C8F6E" stroke-width="3" stroke-linecap="round" fill="none"/>
+      </g>
+      <g>
+        <path d="M320 150 C348 150 358 190 352 235 C348 265 296 265 292 235 C286 190 292 150 320 150 Z" stroke="#DDAE4E" stroke-width="3" fill="none"/>
+        <path d="M300 175 L344 175 M298 200 L346 200 M298 225 L346 225" stroke="#DDAE4E" stroke-width="1.5" opacity="0.5"/>
+        <path d="M320 150 L310 118 M320 150 L330 116" stroke="#7C8F6E" stroke-width="3" stroke-linecap="round" fill="none"/>
+      </g>
+      <path d="M195 260 C195 230 175 210 150 205 C175 215 188 235 190 260" stroke="#7C8F6E" stroke-width="2.5" fill="none"/>
+    </svg>
+  `;
+
+  heroArt.innerHTML = `
+    <div class="hero-photo-frame">
+      ${heroImage
+        ? `<img src="${heroImage}" alt="Makeda Farms">`
+        : `<div class="hero-photo-placeholder">${defaultIllustration}</div>`}
+    </div>
+    <div class="photo-upload-controls">
+      <button class="photo-upload-btn" id="heroChangePhotoBtn">Change photo</button>
+    </div>
+  `;
+
+  document.getElementById('heroChangePhotoBtn').addEventListener('click', () => openPhotoMenu('hero'));
+}
+
+async function addProduct() {
+  const name = document.getElementById('newName').value.trim();
+  const unit = document.getElementById('newUnit').value.trim() || 'Sold individually';
+  const priceLabel = document.getElementById('newPrice').value.trim();
+  const icon = document.getElementById('newIcon').value;
+  if (!name || !priceLabel) { alert('Please enter at least a name and a price.'); return; }
+  const priceNum = parseFloat(priceLabel.replace(/[^0-9.]/g, '')) || 0;
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
+
+  if (supabaseConfigured) {
+    const { error } = await db.from('products').insert({ id, name, unit, price: priceNum, price_label: priceLabel, icon });
+    if (error) { alert('Could not add that product: ' + error.message); return; }
+    products = await loadProducts();
+  } else {
+    products.push({ id, name, unit, priceLabel, price: priceNum, icon });
+    localStorage.setItem('makeda_products', JSON.stringify(products));
+  }
+  renderProducts();
+}
+
+async function removeProduct(id) {
+  if (!confirm('Remove this product from the shop?')) return;
+
+  if (supabaseConfigured) {
+    const { error } = await db.from('products').delete().eq('id', id);
+    if (error) { alert('Could not remove that product.'); return; }
+    products = await loadProducts();
+  } else {
+    products = products.filter(p => p.id !== id);
+    localStorage.setItem('makeda_products', JSON.stringify(products));
+  }
+  if (cart[id]) { delete cart[id]; saveCart(); renderCart(); }
+  renderProducts();
+}
+
+/* ---------- CART ---------- */
+function addToCart(id, btnEl) {
+  cart[id] = (cart[id] || 0) + 1;
+  saveCart();
+  renderCart();
+  if (btnEl) {
+    btnEl.textContent = 'Added';
+    btnEl.classList.add('added');
+    setTimeout(() => { btnEl.textContent = 'Add'; btnEl.classList.remove('added'); }, 900);
+  }
+}
+
+function changeQty(id, delta) {
+  if (!cart[id]) return;
+  cart[id] += delta;
+  if (cart[id] <= 0) delete cart[id];
+  saveCart();
+  renderCart();
+}
+
+function removeFromCart(id) {
+  delete cart[id];
+  saveCart();
+  renderCart();
+}
+
+/* ---------- CART / CHECKOUT / CONFIRMATION VIEWS ---------- */
+const DELIVERY_FEE = 5.00;
+const FARM_ORDER_EMAIL = 'orders@makedafarms.com'; // update this to the real inbox
+
+let checkoutData = { fulfillment: 'pickup', paymentMethod: 'online', name: '', email: '', phone: '', address: '', notes: '' };
+let lastOrder = null;
+
+function cartEntries() {
+  return Object.entries(cart).filter(([id]) => products.find(p => p.id === id));
+}
+function cartSubtotal() {
+  return cartEntries().reduce((sum, [id, qty]) => sum + products.find(p => p.id === id).price * qty, 0);
+}
+
+function updateCartCount() {
+  const totalCount = cartEntries().reduce((sum, [, qty]) => sum + qty, 0);
+  document.getElementById('cartCount').textContent = totalCount;
+}
+
+/* ---- VIEW 1: cart ---- */
+function renderCart() {
+  updateCartCount();
+  document.getElementById('cartDrawerTitle').textContent = 'Your cart';
+  document.getElementById('cartBackBtn').style.display = 'none';
+
+  const entries = cartEntries();
+  const bodyEl = document.getElementById('cartDrawerBody');
+  const footEl = document.getElementById('cartDrawerFoot');
+
+  if (entries.length === 0) {
+    bodyEl.innerHTML = `<p class="cart-empty">Your cart is empty. Add something fresh from this week's harvest.</p>`;
+    footEl.innerHTML = '';
+    return;
+  }
+
+  let subtotal = 0;
+  bodyEl.innerHTML = entries.map(([id, qty]) => {
+    const p = products.find(pr => pr.id === id);
+    subtotal += p.price * qty;
+    return `
+      <div class="cart-item">
+        <div class="cart-item-icon">${p.image ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;border-radius:3px;">` : `<svg viewBox="0 0 88 88" fill="none">${ICONS[p.icon] || ICONS.leaf}</svg>`}</div>
+        <div class="cart-item-info">
+          <h4>${p.name}</h4>
+          <p class="unit">${p.unit}</p>
+        </div>
+        <div class="cart-item-qty">
+          <button class="qty-btn" data-qty-down="${id}">−</button>
+          <span>${qty}</span>
+          <button class="qty-btn" data-qty-up="${id}">+</button>
+        </div>
+        <button class="cart-item-remove" data-remove-cart="${id}">Remove</button>
+      </div>
+    `;
+  }).join('');
+
+  footEl.innerHTML = `
+    <div class="cart-subtotal">
+      <span>Subtotal</span>
+      <span>GH₵${subtotal.toFixed(2)}</span>
+    </div>
+    <button class="checkout-btn" id="goToCheckoutBtn">Checkout</button>
+  `;
+
+  bodyEl.querySelectorAll('[data-qty-up]').forEach(b => b.addEventListener('click', () => changeQty(b.getAttribute('data-qty-up'), 1)));
+  bodyEl.querySelectorAll('[data-qty-down]').forEach(b => b.addEventListener('click', () => changeQty(b.getAttribute('data-qty-down'), -1)));
+  bodyEl.querySelectorAll('[data-remove-cart]').forEach(b => b.addEventListener('click', () => removeFromCart(b.getAttribute('data-remove-cart'))));
+  document.getElementById('goToCheckoutBtn').addEventListener('click', renderCheckoutView);
+}
+
+/* ---- VIEW 2: checkout form ---- */
+function renderCheckoutView() {
+  document.getElementById('cartDrawerTitle').textContent = 'Checkout';
+  document.getElementById('cartBackBtn').style.display = 'block';
+  document.getElementById('cartBackBtn').onclick = renderCart;
+
+  const bodyEl = document.getElementById('cartDrawerBody');
+  const footEl = document.getElementById('cartDrawerFoot');
+  const subtotal = cartSubtotal();
+  const deliveryFee = checkoutData.fulfillment === 'delivery' ? DELIVERY_FEE : 0;
+  const total = subtotal + deliveryFee;
+
+  bodyEl.innerHTML = `
+    <div class="fulfillment-options">
+      <div class="fulfillment-card ${checkoutData.fulfillment === 'pickup' ? 'selected' : ''}" data-fulfillment="pickup">
+        <div class="label">Pickup</div>
+        <div class="sub">Free, at the farm stand</div>
+      </div>
+      <div class="fulfillment-card ${checkoutData.fulfillment === 'delivery' ? 'selected' : ''}" data-fulfillment="delivery">
+        <div class="label">Delivery</div>
+        <div class="sub">GH₵${DELIVERY_FEE.toFixed(2)}, within 15 miles</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="ckName">Full name</label>
+      <input type="text" id="ckName" value="${checkoutData.name}">
+      <p class="field-error" id="errName">Please enter your name.</p>
+    </div>
+    <div class="form-group">
+      <label for="ckEmail">Email</label>
+      <input type="email" id="ckEmail" value="${checkoutData.email}">
+      <p class="field-error" id="errEmail">Please enter a valid email.</p>
+    </div>
+    <div class="form-group">
+      <label for="ckPhone">Phone</label>
+      <input type="tel" id="ckPhone" value="${checkoutData.phone}">
+      <p class="field-error" id="errPhone">Please enter a phone number.</p>
+    </div>
+    <div class="form-group" id="addressGroup" style="display:${checkoutData.fulfillment === 'delivery' ? 'block' : 'none'};">
+      <label for="ckAddress">Delivery address</label>
+      <textarea id="ckAddress">${checkoutData.address}</textarea>
+      <p class="field-error" id="errAddress">Please enter a delivery address.</p>
+    </div>
+    <div class="form-group">
+      <label for="ckNotes">Order notes (optional)</label>
+      <textarea id="ckNotes" placeholder="Anything we should know?">${checkoutData.notes}</textarea>
+    </div>
+
+    ${paystackConfigured ? `
+    <div class="form-group">
+      <label>How would you like to pay?</label>
+      <div class="fulfillment-options">
+        <div class="fulfillment-card ${checkoutData.paymentMethod === 'online' ? 'selected' : ''}" data-payment="online">
+          <div class="label">Pay now</div>
+          <div class="sub">Card or mobile money</div>
+        </div>
+        <div class="fulfillment-card ${checkoutData.paymentMethod === 'pay_later' ? 'selected' : ''}" data-payment="pay_later">
+          <div class="label">Pay later</div>
+          <div class="sub">Cash at ${checkoutData.fulfillment === 'delivery' ? 'delivery' : 'pickup'}</div>
+        </div>
+      </div>
+    </div>
+    ` : `
+    <div class="payment-note">
+      Online payment isn't set up yet — you'll pay by card or cash when you
+      ${checkoutData.fulfillment === 'delivery' ? 'receive your delivery' : 'pick up your order'}.
+      We'll confirm everything by email or phone first.
+    </div>
+    `}
+
+    <div class="checkout-recap">
+      <div class="recap-row"><span>Subtotal</span><span>GH₵${subtotal.toFixed(2)}</span></div>
+      <div class="recap-row"><span>${checkoutData.fulfillment === 'delivery' ? 'Delivery fee' : 'Pickup'}</span><span>GH₵${deliveryFee.toFixed(2)}</span></div>
+      <div class="recap-row total"><span>Total</span><span>GH₵${total.toFixed(2)}</span></div>
+    </div>
+  `;
+
+  footEl.innerHTML = `<button class="checkout-btn" id="placeOrderBtn">${paystackConfigured && checkoutData.paymentMethod === 'online' ? 'Continue to payment' : 'Place order'}</button>`;
+
+  bodyEl.querySelectorAll('[data-fulfillment]').forEach(card => {
+    card.addEventListener('click', () => {
+      checkoutData.fulfillment = card.getAttribute('data-fulfillment');
+      captureCheckoutFields();
+      renderCheckoutView();
+    });
+  });
+  bodyEl.querySelectorAll('[data-payment]').forEach(card => {
+    card.addEventListener('click', () => {
+      checkoutData.paymentMethod = card.getAttribute('data-payment');
+      captureCheckoutFields();
+      renderCheckoutView();
+    });
+  });
+
+  document.getElementById('placeOrderBtn').addEventListener('click', submitOrder);
+}
+
+function captureCheckoutFields() {
+  const g = id => document.getElementById(id);
+  if (g('ckName')) checkoutData.name = g('ckName').value;
+  if (g('ckEmail')) checkoutData.email = g('ckEmail').value;
+  if (g('ckPhone')) checkoutData.phone = g('ckPhone').value;
+  if (g('ckAddress')) checkoutData.address = g('ckAddress').value;
+  if (g('ckNotes')) checkoutData.notes = g('ckNotes').value;
+}
+
+async function submitOrder() {
+  captureCheckoutFields();
+  let valid = true;
+  const showErr = id => { document.getElementById(id).classList.add('show'); valid = false; };
+  document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show'));
+
+  if (!checkoutData.name.trim()) showErr('errName');
+  if (!/^\S+@\S+\.\S+$/.test(checkoutData.email.trim())) showErr('errEmail');
+  if (!checkoutData.phone.trim()) showErr('errPhone');
+  if (checkoutData.fulfillment === 'delivery' && !checkoutData.address.trim()) showErr('errAddress');
+  if (!valid) return;
+
+  const payOnline = paystackConfigured && checkoutData.paymentMethod === 'online';
+
+  const placeOrderBtn = document.getElementById('placeOrderBtn');
+  placeOrderBtn.disabled = true;
+  placeOrderBtn.textContent = payOnline ? 'Opening payment…' : 'Placing order…';
+
+  const subtotal = cartSubtotal();
+  const deliveryFee = checkoutData.fulfillment === 'delivery' ? DELIVERY_FEE : 0;
+  const items = cartEntries().map(([id, qty]) => {
+    const p = products.find(pr => pr.id === id);
+    return { name: p.name, qty, unit: p.unit, price: p.price, lineTotal: p.price * qty };
+  });
+  const order = {
+    ref: 'MF-' + Date.now().toString().slice(-6),
+    placedAt: new Date().toISOString(),
+    items,
+    fulfillment: checkoutData.fulfillment,
+    paymentMethod: payOnline ? 'online' : 'pay_on_pickup',
+    subtotal, deliveryFee, total: subtotal + deliveryFee,
+    ...checkoutData
+  };
+
+  if (supabaseConfigured) {
+    const { error } = await db.from('orders').insert({
+      ref: order.ref, items: order.items, fulfillment: order.fulfillment,
+      name: order.name, email: order.email, phone: order.phone,
+      address: order.address || null, notes: order.notes || null,
+      subtotal: order.subtotal, delivery_fee: order.deliveryFee, total: order.total,
+      payment_method: order.paymentMethod
+    });
+    if (error) {
+      placeOrderBtn.disabled = false;
+      placeOrderBtn.textContent = payOnline ? 'Continue to payment' : 'Place order';
+      console.error('Order insert failed:', error.message || error);
+      alert('Something went wrong placing your order: ' + (error.message || 'unknown error') + '. Please try again.');
+      return;
+    }
+  } else {
+    const orders = JSON.parse(localStorage.getItem('makeda_orders') || '[]');
+    orders.unshift(order);
+    localStorage.setItem('makeda_orders', JSON.stringify(orders));
+  }
+
+  if (!payOnline) {
+    order.paymentStatus = 'unpaid';
+    finishOrder(order);
+    return;
+  }
+
+  // Launch Paystack — customer chooses card or mobile money in the popup
+  const handler = PaystackPop.setup({
+    key: PAYSTACK_PUBLIC_KEY,
+    email: order.email,
+    amount: Math.round(order.total * 100), // Paystack expects pesewas
+    currency: 'GHS',
+    ref: order.ref,
+    onClose: function () {
+      placeOrderBtn.disabled = false;
+      placeOrderBtn.textContent = 'Continue to payment';
+    },
+    callback: function (response) {
+      placeOrderBtn.textContent = 'Confirming payment…';
+      // TEMPORARY WORKAROUND — see notes above verifyPayment() below.
+      // Once the Supabase Edge Function issue is fixed, change this back to:
+      //   verifyPayment(response.reference, order, placeOrderBtn);
+      trustClientSidePayment(response.reference, order);
+    }
+  });
+  handler.openIframe();
+}
+
+// ============================================================
+// TEMPORARY (INSECURE) — remove once verify-payment Edge Function works
+// ------------------------------------------------------------
+// This trusts Paystack's in-browser "success" response directly, without
+// the server-side double-check that verifyPayment()/the Edge Function
+// normally does. It's only safe to use while testing with Paystack TEST
+// keys, where no real money moves. Before switching to LIVE keys, this
+// must be replaced with the real verifyPayment() flow below, and the
+// temporary RLS policy added for this ("Temporary anon can update payment
+// status") must be removed from Supabase, since right now it lets anyone
+// mark any order as paid.
+// ============================================================
+async function trustClientSidePayment(reference, order) {
+  if (supabaseConfigured) {
+    await db.from('orders').update({ payment_status: 'paid', payment_reference: reference }).eq('ref', order.ref);
+  }
+  order.paymentStatus = 'paid';
+  finishOrder(order);
+}
+
+async function verifyPayment(reference, order, placeOrderBtn) {
+  try {
+    const res = await fetch(VERIFY_PAYMENT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference })
+    });
+    const result = await res.json();
+    if (result.verified) {
+      order.paymentStatus = 'paid';
+      finishOrder(order);
+    } else {
+      alert("We couldn't confirm that payment (" + (result.reason || 'unknown reason') + "). You haven't been charged twice — please try again, or choose 'Pay later' to reserve your order and pay at pickup/delivery instead.");
+      placeOrderBtn.disabled = false;
+      placeOrderBtn.textContent = 'Continue to payment';
+    }
+  } catch (err) {
+    alert("We couldn't confirm your payment due to a connection issue. If you were charged, contact the farm with your order reference: " + order.ref);
+    placeOrderBtn.disabled = false;
+    placeOrderBtn.textContent = 'Continue to payment';
+  }
+}
+
+function finishOrder(order) {
+  lastOrder = order;
+  cart = {};
+  saveCart();
+  renderConfirmationView(order);
+}
+
+/* ---- VIEW 3: confirmation ---- */
+function renderConfirmationView(order) {
+  document.getElementById('cartDrawerTitle').textContent = 'Order received';
+  document.getElementById('cartBackBtn').style.display = 'none';
+  updateCartCount();
+
+  const bodyEl = document.getElementById('cartDrawerBody');
+  const footEl = document.getElementById('cartDrawerFoot');
+
+  const mailBody = encodeURIComponent(
+    `New order ${order.ref}\n\n` +
+    order.items.map(i => `${i.qty} x ${i.name} (${i.unit}) — GH₵${i.lineTotal.toFixed(2)}`).join('\n') +
+    `\n\nSubtotal: GH₵${order.subtotal.toFixed(2)}\n` +
+    `${order.fulfillment === 'delivery' ? 'Delivery fee' : 'Pickup'}: GH₵${order.deliveryFee.toFixed(2)}\n` +
+    `Total: GH₵${order.total.toFixed(2)}\n\n` +
+    `Fulfillment: ${order.fulfillment === 'delivery' ? 'Delivery' : 'Pickup at the farm stand'}\n` +
+    `Payment: ${order.paymentStatus === 'paid' ? 'Paid online (' + order.ref + ')' : 'Not yet paid — pay at ' + (order.fulfillment === 'delivery' ? 'delivery' : 'pickup')}\n` +
+    (order.fulfillment === 'delivery' ? `Address: ${order.address}\n` : '') +
+    `\nName: ${order.name}\nEmail: ${order.email}\nPhone: ${order.phone}\n` +
+    (order.notes ? `Notes: ${order.notes}\n` : '')
+  ).replace(/%0A/g, '%0D%0A');
+  const mailtoHref = `mailto:${FARM_ORDER_EMAIL}?subject=${encodeURIComponent('New order ' + order.ref)}&body=${mailBody}`;
+
+  bodyEl.innerHTML = `
+    <div class="confirmation-view">
+      <div class="check-badge">&#10003;</div>
+      <h4>Thanks, ${order.name.split(' ')[0] || 'friend'}!</h4>
+      <p>Your order <span class="order-ref">${order.ref}</span> has been saved.</p>
+      ${order.paymentStatus === 'paid'
+        ? `<p>Payment received — thank you! ${order.fulfillment === 'delivery' ? "We'll deliver it to you" : "It'll be ready for pickup at the farm stand"} once we confirm by phone or email.</p>`
+        : `<p>${order.fulfillment === 'delivery' ? "We'll deliver it to you" : "It'll be ready for pickup at the farm stand"} once we confirm by phone or email. You'll pay by card or cash at ${order.fulfillment === 'delivery' ? 'delivery' : 'pickup'}.</p>`}
+      <a class="email-order-link" href="${mailtoHref}">Email this order to the farm</a>
+    </div>
+  `;
+
+  footEl.innerHTML = `<button class="checkout-btn" id="continueShoppingBtn">Continue shopping</button>`;
+  document.getElementById('continueShoppingBtn').addEventListener('click', () => { renderCart(); });
+}
+
+/* ---------- DRAWER / OVERLAY ---------- */
+const cartDrawer = document.getElementById('cartDrawer');
+const overlay = document.getElementById('overlay');
+const loginModal = document.getElementById('loginModal');
+
+function openCart() { cartDrawer.classList.add('open'); overlay.classList.add('open'); }
+function closeCart() { cartDrawer.classList.remove('open'); overlay.classList.remove('open'); }
+function closeAll() {
+  closeCart();
+  loginModal.classList.remove('open');
+  photoMenuModal.classList.remove('open');
+  urlModal.classList.remove('open');
+  closeCameraCapture();
+  overlay.classList.remove('open');
+}
+
+document.getElementById('cartBtn').addEventListener('click', () => { openCart(); renderCart(); });
+document.getElementById('cartCloseBtn').addEventListener('click', closeCart);
+overlay.addEventListener('click', closeAll);
+
+/* ---------- OWNER LOGIN ---------- */
+document.getElementById('ownerLinkBtn').addEventListener('click', async () => {
+  if (adminMode) {
+    if (supabaseConfigured) await db.auth.signOut();
+    adminMode = false;
+    document.getElementById('adminBar').classList.remove('visible');
+    renderProducts();
+  } else {
+    loginModal.classList.add('open');
+    overlay.classList.add('open');
+    document.getElementById('ownerEmail').focus();
+  }
+});
+document.getElementById('loginCancelBtn').addEventListener('click', () => {
+  loginModal.classList.remove('open');
+  overlay.classList.remove('open');
+});
+document.getElementById('loginSubmitBtn').addEventListener('click', submitLogin);
+document.getElementById('ownerEmail').addEventListener('keydown', e => { if (e.key === 'Enter') submitLogin(); });
+document.getElementById('ownerPassword').addEventListener('keydown', e => { if (e.key === 'Enter') submitLogin(); });
+
+async function submitLogin() {
+  const email = document.getElementById('ownerEmail').value.trim();
+  const password = document.getElementById('ownerPassword').value;
+  const errorEl = document.getElementById('loginError');
+  errorEl.classList.remove('show');
+
+  if (!supabaseConfigured) {
+    // Local demo mode, before Supabase is wired up — same placeholder passcode as before
+    if (password === 'makeda2026') { adminMode = true; finishLogin(); }
+    else { errorEl.textContent = "That passcode isn't right."; errorEl.classList.add('show'); }
+    return;
+  }
+
+  const { error } = await db.auth.signInWithPassword({ email, password });
+  if (error) {
+    errorEl.textContent = "That email or password isn't right.";
+    errorEl.classList.add('show');
+    return;
+  }
+  adminMode = true;
+  finishLogin();
+}
+
+function finishLogin() {
+  loginModal.classList.remove('open');
+  overlay.classList.remove('open');
+  document.getElementById('ownerEmail').value = '';
+  document.getElementById('ownerPassword').value = '';
+  document.getElementById('adminBar').classList.add('visible');
+  renderProducts();
+}
+
+document.getElementById('exitAdminBtn').addEventListener('click', async () => {
+  if (supabaseConfigured) await db.auth.signOut();
+  adminMode = false;
+  document.getElementById('adminBar').classList.remove('visible');
+  renderProducts();
+});
+
+/* ---------- SITE-WIDE FLOWING BACKGROUND ---------- */
+const siteBgFlowInner = document.getElementById('siteBgFlowInner');
+let bgFlowTicking = false;
+
+function updateBgFlow() {
+  bgFlowTicking = false;
+  const scrollableDistance = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = scrollableDistance > 0
+    ? Math.min(1, Math.max(0, window.scrollY / scrollableDistance))
+    : 0;
+  // Scroll shifts the gradient's position; a separate CSS animation handles
+  // the slow continuous hue drift, so it's never fully static even at rest.
+  siteBgFlowInner.style.backgroundPosition = `${progress * 100}% ${40 + progress * 40}%`;
+}
+
+window.addEventListener('scroll', () => {
+  if (!bgFlowTicking) {
+    bgFlowTicking = true;
+    requestAnimationFrame(updateBgFlow);
+  }
+}, { passive: true });
+window.addEventListener('resize', updateBgFlow);
+updateBgFlow();
+
+/* ---------- INIT ---------- */
+async function init() {
+  // Restore an existing owner session (real Supabase sessions persist across
+  // page loads/refreshes automatically — no more re-entering a passcode
+  // every visit).
+  if (supabaseConfigured) {
+    const { data } = await db.auth.getSession();
+    if (data.session) {
+      adminMode = true;
+      document.getElementById('adminBar').classList.add('visible');
+    }
+  }
+
+  products = await loadProducts();
+  renderProducts();
+  renderHero();
+  renderCart();
+}
+init();
+</script>
+
+</body>
+</html>
