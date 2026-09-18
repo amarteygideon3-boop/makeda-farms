@@ -1923,33 +1923,10 @@ async function submitOrder() {
     },
     callback: function (response) {
       placeOrderBtn.textContent = 'Confirming payment…';
-      // TEMPORARY WORKAROUND — see notes above verifyPayment() below.
-      // Once the Supabase Edge Function issue is fixed, change this back to:
-      //   verifyPayment(response.reference, order, placeOrderBtn);
-      trustClientSidePayment(response.reference, order);
+      verifyPayment(response.reference, order, placeOrderBtn);
     }
   });
   handler.openIframe();
-}
-
-// ============================================================
-// TEMPORARY (INSECURE) — remove once verify-payment Edge Function works
-// ------------------------------------------------------------
-// This trusts Paystack's in-browser "success" response directly, without
-// the server-side double-check that verifyPayment()/the Edge Function
-// normally does. It's only safe to use while testing with Paystack TEST
-// keys, where no real money moves. Before switching to LIVE keys, this
-// must be replaced with the real verifyPayment() flow below, and the
-// temporary RLS policy added for this ("Temporary anon can update payment
-// status") must be removed from Supabase, since right now it lets anyone
-// mark any order as paid.
-// ============================================================
-async function trustClientSidePayment(reference, order) {
-  if (supabaseConfigured) {
-    await db.from('orders').update({ payment_status: 'paid', payment_reference: reference }).eq('ref', order.ref);
-  }
-  order.paymentStatus = 'paid';
-  finishOrder(order);
 }
 
 async function verifyPayment(reference, order, placeOrderBtn) {
